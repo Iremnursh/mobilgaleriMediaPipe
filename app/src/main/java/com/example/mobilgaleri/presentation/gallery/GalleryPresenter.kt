@@ -1,0 +1,118 @@
+//com/example/mobilgaleri/presentation/gallery/GalleryPresenter.kt
+package com.example.mobilgaleri.presentation.gallery
+
+import android.content.ContentResolver
+import android.content.Context
+import com.example.mobilgaleri.data.face.MediaPipeFaceDetector
+import com.example.mobilgaleri.data.face.TfliteEmbedder
+import com.example.mobilgaleri.domain.repository.ContactsRepository
+import com.example.mobilgaleri.domain.repository.FaceRepository
+import com.example.mobilgaleri.domain.repository.GalleryRepository
+import com.example.mobilgaleri.domain.repository.PersonRepository
+import com.example.mobilgaleri.domain.usecase.ClusterFacesUseCase
+import com.example.mobilgaleri.domain.usecase.GetSavedClustersUseCase
+import com.example.mobilgaleri.domain.usecase.MatchContactsUseCase
+import com.example.mobilgaleri.domain.usecase.SyncAndClusterNewFacesUseCase
+import kotlinx.coroutines.*
+import com.example.mobilgaleri.di.AppModule   // ADDED
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onCompletion
+
+class GalleryPresenter(
+    private val galleryRepository: GalleryRepository,
+    private val faceRepository: FaceRepository,
+    private val personRepository: PersonRepository,
+    private val contactsRepository: ContactsRepository,
+    private val contentResolver: ContentResolver,
+    private val detector: MediaPipeFaceDetector,
+    private val embedder: TfliteEmbedder,
+    private val appContext: Context
+) : GalleryContract.Presenter {
+
+    private var view: GalleryContract.View? = null
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    override fun attach(view: GalleryContract.View) { this.view = view }
+    override fun detach() { this.view = null; scope.coroutineContext.cancelChildren() }
+
+    override fun loadAndSyncClusters() {
+        scope.launch {
+            // 1) Kayıtlı kümeleri hızlıca göster
+            try {
+                view?.showLoading(true)
+                val getSaved = GetSavedClustersUseCase(faceRepository, galleryRepository, personRepository)
+                val (initialClusters, initialDetails) = getSaved()
+                view?.displayClusters(initialClusters, initialDetails)
+            } catch (e: Exception) {
+                view?.showError("Kayıtlı veriler yüklenirken hata: ${e.message}")
+            } finally {
+                view?.showLoading(false)
+            }
+
+            // 2) Yeni yüzleri tarayıp ilerleme yayınla (Flow) — UseCase'i AppModule'dan al
+            val syncUseCase = AppModule.provideSyncAndClusterNewFacesUseCase(appContext)
+
+            // Süre ölçümü (yalnızca sync kısmı)
+            val startNs = System.nanoTime()
+
+            syncUseCase.run()
+                .catch { e ->
+                    view?.hideProgress()
+                    view?.showError("Tarama sırasında hata: ${e.message}")
+                }
+                .onCompletion {
+                    // Her durumda bittiğinde overlay'i kapat
+                    view?.hideProgress()
+                }
+                .collect { update ->
+                    when (update) {
+                        is ClusteringUpdate.Progress -> {
+                            view?.updateProgress(update.processed, update.total)
+                        }
+                        is ClusteringUpdate.Completed -> {
+                            val elapsedSec = (System.nanoTime() - startNs) / 1_000_000_000.0
+                            val secText = String.format(java.util.Locale("tr"), "%.1f", elapsedSec)
+
+                            // En güncel kümeleri çek ve göster
+                            val (finalClusters, finalDetails) =
+                                GetSavedClustersUseCase(faceRepository, galleryRepository, personRepository).invoke()
+                            view?.displayClusters(finalClusters, finalDetails)
+
+                            // Özet toast(lar)
+                            view?.showSummaryToast("Galerinizde yüz olan fotoğraflar $secText saniyede tespit edildi")
+
+                            val newFacesCount = update.newFacesScanned
+                            if (newFacesCount > 0) {
+                                view?.showSummaryToast("$newFacesCount yeni yüz tarandı ve eklendi.")
+                            }
+
+                            // Kullanıcıdan rehber eşleştirme onayı iste (alt sayfa)
+                            view?.showContactsMatchPrompt()
+                        }
+                    }
+                }
+        }
+    }
+
+    override fun matchFacesWithContacts() {
+        scope.launch {
+            try {
+                val matchUseCase = MatchContactsUseCase(
+                    personRepository = personRepository,
+                    contactsRepository = contactsRepository,
+                    embedder = embedder,
+                    contentResolver = contentResolver,
+                    landmarker = AppModule.provideFaceLandmarker(appContext)
+                )
+                matchUseCase.invoke()
+
+                val (finalClusters, finalDetails) =
+                    GetSavedClustersUseCase(faceRepository, galleryRepository, personRepository).invoke()
+                view?.displayClusters(finalClusters, finalDetails)
+
+                view?.showSummaryToast("Rehber eşleştirmesi tamamlandı.")
+            } catch (e: Exception) {
+                view?.showError("Rehber eşleştirme sırasında hata: ${e.message}")
+            }
+        }
+    }
+}

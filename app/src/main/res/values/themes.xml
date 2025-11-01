@@ -1,0 +1,15 @@
+<resources>
+    <!-- Uygulama sonrası tema -->
+    <style name="Theme.MobilGaleri" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <!-- Splash teması (Android 12+ için önerilen) -->
+    <style name="Theme.MobilGaleri.Splash" parent="Theme.SplashScreen">
+        <!-- Splash arka plan rengi -->
+        <item name="windowSplashScreenBackground">#54b1fe</item>
+        <!-- Ortadaki ikon: launcher ikonunu kullan -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <!-- Splash bittikten sonra geçilecek tema -->
+        <item name="postSplashScreenTheme">@style/Theme.MobilGaleri</item>
+    </style>
+</resources>

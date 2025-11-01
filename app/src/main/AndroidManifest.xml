@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- İzinler -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+
+    <application
+        android:name=".MobilGaleriApp"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MobilGaleri.Splash"
+        android:background="@drawable/bg_onboarding_blue"
+        tools:targetApi="31">   <!-- ← aynı açılış etiketinin içinde olmalı -->
+
+
+        <!-- LAUNCHER: MainActivity'nin içine intent-filter KOY -->
+        <activity
+            android:name=".presentation.MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MobilGaleri">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Benchmark (iç ekran) -->
+        <activity
+            android:name=".bench.LabelFreeBenchmarkActivity"
+            android:exported="false"
+            android:label="Label-free Benchmark"
+            android:theme="@style/Theme.MobilGaleri" />
+
+        <!-- Cluster Eval (iç ekran) -->
+        <activity
+            android:name=".bench.ClusterEvalActivity"
+            android:exported="false"
+            android:label="Cluster Eval"
+            android:theme="@style/Theme.MobilGaleri" />
+
+        <activity
+            android:name=".presentation.onboarding.OnboardingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MobilGaleri" />
+    </application>
+</manifest>

@@ -1,0 +1,19 @@
+﻿# Android/Gradle
+.gradle/
+**/build/
+local.properties
+*.iml
+.idea/
+.cxx/
+
+# Keystore ve hassas dosyalar
+*.jks
+*.keystore
+
+# Python (yanlışlıkla eklenenler)
+venv*/
+.env/
+*.pyc
+__pycache__/
+*.pyd
+*.so

@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">MobilGaleri</string>
+
+    <!-- Onboarding: Foto/Galeri izni metni -->
+    <string name="perm_photos_desc">
+        Öncelikle galerinizdeki fotoğraflara erişim yapılacak ve fotoğraflardaki yüzler tespit edilecektir.
+        Bunun için galeriye erişime izin vermeniz gerekmektedir.
+    </string>
+
+    <!-- Onboarding: Rehber izni metni (FARKLI) -->
+    <string name="perm_contacts_desc">
+        Galeri erişimi tamamlandı. Şimdi sırada, yüzleri rehberinizdeki kişilerle eşleştirmek için
+        rehber erişim izni var. Bu izin, tespit edilen kişi fotoğraflarını kişilerinizle eşleştirebilmemiz için gereklidir.
+    </string>
+</resources>
