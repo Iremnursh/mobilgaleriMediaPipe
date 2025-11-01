@@ -2,3 +2,7 @@
 *.tflite filter=lfs diff=lfs merge=lfs -text
 *.pb filter=lfs diff=lfs merge=lfs -text
 *.data-* filter=lfs diff=lfs merge=lfs -text
+* text=auto
+*.kt  text eol=lf
+*.kts text eol=lf
+*.sh  text eol=lf
