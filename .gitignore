@@ -17,3 +17,14 @@ venv*/
 __pycache__/
 *.pyd
 *.so
+
+
+
+.kotlin/errors/
+app/build/
+.gradle/
+local.properties
+*.apk
+*.aab
+*.log
+*.tmp
